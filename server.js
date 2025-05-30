@@ -46,6 +46,7 @@ app.get('/api/jira/issues', async (req, res) => {
 
     const issues = response.data.issues.map(issue => ({
       key: issue.key,
+      url: `${process.env.JIRA_BASE_URL}/browse/${issue.key}`,
       summary: issue.fields.summary,
       status: issue.fields.status.name,
       assignee: issue.fields.assignee?.displayName || '미지정'
