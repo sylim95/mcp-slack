@@ -4,15 +4,20 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
+// __dirname 대체
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();
 
 const app = express();
+
+// ✅ GPT MCP 연결 위해 CORS 허용
+app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/api/slack/send', async (req, res) => {
