@@ -12,13 +12,21 @@ app.use(bodyParser.json());
 
 // Jira 이슈 조회
 app.get('/api/jira/issues', async (req, res) => {
-  const { summary } = req.query;
+  const { summary, assignee, status } = req.query;
 
-  if (!summary) {
-    return res.status(400).json({ error: "Missing 'summary' query parameter." });
+  if (!summary && !assignee && !status) {
+    return res.status(400).json({
+      error: "summary, assignee, status 중 하나는 반드시 포함되어야 합니다."
+    });
   }
 
-  const jql = `summary ~ "${summary}" ORDER BY updated DESC`;
+  // 유동적인 JQL 쿼리 구성
+  let jqlParts = [];
+  if (summary) jqlParts.push(`summary ~ "${summary}"`);
+  if (assignee) jqlParts.push(`assignee = "${assignee}"`);
+  if (status) jqlParts.push(`status = "${status}"`);
+  const jql = jqlParts.join(' AND ');
+
   const jiraUrl = `${process.env.JIRA_BASE_URL}/rest/api/3/search`;
 
   try {
@@ -38,13 +46,13 @@ app.get('/api/jira/issues', async (req, res) => {
       key: issue.key,
       summary: issue.fields.summary,
       status: issue.fields.status.name,
-      assignee: issue.fields.assignee?.displayName
+      assignee: issue.fields.assignee?.displayName || '미지정'
     }));
 
     res.json({ issues });
   } catch (err) {
-    console.error("Jira API error:", err.message);
-    res.status(500).json({ error: "Jira API 호출 실패" });
+    console.error('Jira API 오류:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Jira API 호출 실패' });
   }
 });
 
