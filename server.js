@@ -50,13 +50,35 @@ app.get('/api/jira/issues', async (req, res) => {
 
 // Slack 메시지 전송
 app.post('/api/slack/send', async (req, res) => {
-  const { channel, message } = req.body;
-  if (!channel || !message) return res.status(400).json({ error: "Missing 'channel' or 'message'" });
+  const { channel, message, imageUrl } = req.body;
+
+  if (!channel || !message) {
+    return res.status(400).json({ error: "Missing 'channel' or 'message'" });
+  }
+
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: message
+      }
+    }
+  ];
+
+  if (imageUrl) {
+    blocks.push({
+      type: 'image',
+      image_url: imageUrl,
+      alt_text: '분석 대상 이미지'
+    });
+  }
 
   try {
     const result = await axios.post('https://slack.com/api/chat.postMessage', {
       channel,
-      text: message
+      text: message,
+      blocks
     }, {
       headers: {
         Authorization: `Bearer ${process.env.SLACK_TOKEN}`,
