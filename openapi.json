@@ -30,14 +30,36 @@
         ],
         "responses": {
           "200": {
-            "description": "이슈 목록 반환"
+            "description": "이슈 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": { "type": "string" },
+                          "url": { "type": "string" },
+                          "summary": { "type": "string" },
+                          "status": { "type": "string" },
+                          "assignee": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/jira/comments/summary": {
+    "/api/jira/comments": {
       "get": {
-        "summary": "지라 이슈 댓글 요약 후 슬랙 전송",
+        "summary": "Jira 이슈 댓글 조회",
         "parameters": [
           {
             "name": "key",
@@ -45,18 +67,31 @@
             "required": true,
             "description": "예: CATS-1234",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "channel",
-            "in": "query",
-            "required": true,
-            "description": "슬랙 채널명 (예: #project-test)",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "슬랙 메시지 전송 성공"
+            "description": "댓글 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "comments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "author": { "type": "string" },
+                          "created": { "type": "string", "format": "date-time" },
+                          "body": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
