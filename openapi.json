@@ -1,31 +1,47 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Jira → Slack MCP",
+    "title": "Jira Issue Search + Slack Notifier",
     "version": "1.0.0"
   },
   "paths": {
     "/api/jira/issues": {
       "get": {
-        "summary": "Jira 이슈 조회",
-        "operationId": "getJiraIssues",
+        "summary": "Jira 이슈 검색 (제목 또는 담당자/상태)",
+        "description": "Jira 이슈를 제목(summary) 키워드 또는 담당자(assignee), 상태(status) 기준으로 검색합니다.",
+        "operationId": "searchJiraIssues",
         "parameters": [
+          {
+            "name": "summary",
+            "in": "query",
+            "required": false,
+            "description": "이슈 제목에 포함된 키워드. 예: 프롬프트 관리 기능",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "assignee",
             "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
+            "required": false,
+            "description": "이슈 담당자 이름. 예: 임수영",
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "status",
             "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
+            "required": false,
+            "description": "이슈 상태. 예: 진행중, 운영배포대기",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "조회된 Jira 이슈 목록",
+            "description": "이슈 검색 결과",
             "content": {
               "application/json": {
                 "schema": {
@@ -62,8 +78,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "channel": { "type": "string" },
-                  "message": { "type": "string" }
+                  "channel": {
+                    "type": "string",
+                    "example": "#project-test"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "이슈 리스트를 전달드립니다..."
+                  }
                 },
                 "required": ["channel", "message"]
               }
@@ -72,7 +94,18 @@
         },
         "responses": {
           "200": {
-            "description": "전송 결과"
+            "description": "메시지 전송 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "ts": { "type": "string" }
+                  }
+                }
+              }
+            }
           }
         }
       }
