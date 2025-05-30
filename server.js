@@ -20,7 +20,6 @@ app.get('/api/jira/issues', async (req, res) => {
     });
   }
 
-  // 유동적인 JQL 쿼리 구성
   let jqlParts = [];
   if (summary) jqlParts.push(`summary ~ "${summary}"`);
   if (assignee) jqlParts.push(`assignee = "${assignee}"`);
@@ -58,6 +57,74 @@ app.get('/api/jira/issues', async (req, res) => {
     res.status(500).json({ error: 'Jira API 호출 실패' });
   }
 });
+
+// Jira 댓글 요약
+app.get('/api/jira/comments/summary', async (req, res) => {
+  const { key, channel } = req.query;
+
+  if (!key || !channel) {
+    return res.status(400).json({ error: "Missing 'key' or 'channel'" });
+  }
+
+  const url = `${process.env.JIRA_BASE_URL}/rest/api/3/issue/${key}/comment`;
+
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Basic ${process.env.JIRA_API_TOKEN}`,
+        Accept: 'application/json'
+      }
+    });
+
+    const comments = (response.data.comments || [])
+      .map(c => extractPlainText(c.body))
+      .filter(Boolean)
+      .slice(0, 10);
+
+    const joined = comments.map((c, i) => `${i + 1}. ${c}`).join('\n');
+
+    const gptRes = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "너는 Jira 댓글을 요약하는 어시스턴트야." },
+        { role: "user", content: `다음 Jira 이슈의 댓글을 요약해줘:\n\n${joined}` }
+      ],
+      temperature: 0.3
+    }, {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const summary = gptRes.data.choices[0].message.content.trim();
+
+    await axios.post('https://slack.com/api/chat.postMessage', {
+      channel,
+      text: `📝 *${key} 이슈 댓글 요약*\n\n${summary}`
+    }, {
+      headers: {
+        Authorization: `Bearer ${process.env.SLACK_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('요약 실패:', e.response?.data || e.message);
+    res.status(500).json({ error: '댓글 요약 실패' });
+  }
+});
+
+function extractPlainText(body) {
+  try {
+    return body.content.flatMap(block =>
+      block.content?.map(inline => inline.text || '').filter(Boolean)
+    ).join(' ');
+  } catch {
+    return '';
+  }
+}
 
 // Slack 메시지 전송
 app.post('/api/slack/send', async (req, res) => {
@@ -104,7 +171,7 @@ app.post('/api/slack/send', async (req, res) => {
   }
 });
 
-// GPT Tool용 OpenAPI 명세
+// OpenAPI 명세 제공
 app.get('/openapi.json', (req, res) => {
   res.type('application/json').sendFile('./openapi.json', { root: '.' });
 });
