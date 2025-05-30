@@ -76,11 +76,15 @@ app.get('/api/jira/comments', async (req, res) => {
       }
     });
 
-    const comments = (response.data.comments || []).map(comment => ({
-      author: comment.author.displayName,
-      created: comment.created,
-      body: extractPlainText(comment.body)
-    }));
+    const comments = (response.data.comments || []).map(comment => {
+      console.log('comment.body:', JSON.stringify(comment.body, null, 2));
+    
+      return {
+        author: comment.author.displayName,
+        created: comment.created,
+        body: extractPlainText(comment.body)
+      };
+    });
 
     res.json({ comments });
   } catch (e) {
