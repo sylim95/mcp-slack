@@ -1,68 +1,62 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Jira Issue Search + Slack Notifier",
+    "title": "Jira to Slack MCP API",
     "version": "1.0.0"
   },
   "paths": {
     "/api/jira/issues": {
       "get": {
-        "summary": "Jira 이슈 검색 (제목 또는 담당자/상태)",
-        "description": "Jira 이슈를 제목(summary) 키워드 또는 담당자(assignee), 상태(status) 기준으로 검색합니다.",
-        "operationId": "searchJiraIssues",
+        "summary": "Jira 이슈 목록 조회",
         "parameters": [
           {
             "name": "summary",
             "in": "query",
             "required": false,
-            "description": "이슈 제목에 포함된 키워드. 예: 프롬프트 관리 기능",
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "assignee",
             "in": "query",
             "required": false,
-            "description": "이슈 담당자 이름. 예: 임수영",
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
             "in": "query",
             "required": false,
-            "description": "이슈 상태. 예: 진행중, 운영배포대기",
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "이슈 검색 결과",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "key": { "type": "string" },
-                          "summary": { "type": "string" },
-                          "status": { "type": "string" },
-                          "assignee": { "type": "string" }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "이슈 목록 반환"
+          }
+        }
+      }
+    },
+    "/api/jira/comments/summary": {
+      "get": {
+        "summary": "지라 이슈 댓글 요약 후 슬랙 전송",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "description": "예: CATS-1234",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "슬랙 채널명 (예: #project-test)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "슬랙 메시지 전송 성공"
           }
         }
       }
@@ -70,7 +64,6 @@
     "/api/slack/send": {
       "post": {
         "summary": "슬랙 메시지 전송",
-        "operationId": "sendSlackMessage",
         "requestBody": {
           "required": true,
           "content": {
@@ -78,14 +71,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "channel": {
-                    "type": "string",
-                    "example": "#project-test"
-                  },
-                  "message": {
-                    "type": "string",
-                    "example": "이슈 리스트를 전달드립니다..."
-                  }
+                  "channel": { "type": "string" },
+                  "message": { "type": "string" },
+                  "imageUrl": { "type": "string" }
                 },
                 "required": ["channel", "message"]
               }
@@ -94,18 +82,7 @@
         },
         "responses": {
           "200": {
-            "description": "메시지 전송 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "ts": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "전송 성공"
           }
         }
       }
