@@ -1,38 +1,47 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Food Search + Slack Notifier",
+    "title": "Jira → Slack MCP",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/search/food": {
+    "/api/jira/issues": {
       "get": {
-        "summary": "맛집 검색",
-        "operationId": "searchFood",
+        "summary": "Jira 이슈 조회",
+        "operationId": "getJiraIssues",
         "parameters": [
           {
-            "name": "query",
+            "name": "assignee",
             "in": "query",
             "required": true,
-            "description": "검색할 키워드 예: 강남역 맛집",
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "검색 결과 반환",
+            "description": "조회된 Jira 이슈 목록",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "title": { "type": "string" },
-                      "link": { "type": "string" },
-                      "snippet": { "type": "string" }
+                  "type": "object",
+                  "properties": {
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": { "type": "string" },
+                          "summary": { "type": "string" },
+                          "status": { "type": "string" },
+                          "assignee": { "type": "string" }
+                        }
+                      }
                     }
                   }
                 }
@@ -44,7 +53,7 @@
     },
     "/api/slack/send": {
       "post": {
-        "summary": "슬랙 채널로 메시지 전송",
+        "summary": "슬랙 메시지 전송",
         "operationId": "sendSlackMessage",
         "requestBody": {
           "required": true,
@@ -53,14 +62,8 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "channel": {
-                    "type": "string",
-                    "example": "#general"
-                  },
-                  "message": {
-                    "type": "string",
-                    "example": "강남역 맛집 추천 결과입니다!"
-                  }
+                  "channel": { "type": "string" },
+                  "message": { "type": "string" }
                 },
                 "required": ["channel", "message"]
               }
@@ -69,18 +72,7 @@
         },
         "responses": {
           "200": {
-            "description": "전송 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "ts": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "전송 결과"
           }
         }
       }
