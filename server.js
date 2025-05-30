@@ -12,13 +12,13 @@ app.use(bodyParser.json());
 
 // Jira 이슈 조회
 app.get('/api/jira/issues', async (req, res) => {
-  const { assignee, status } = req.query;
+  const { summary } = req.query;
 
-  if (!assignee || !status) {
-    return res.status(400).json({ error: "Missing 'assignee' or 'status' query parameter." });
+  if (!summary) {
+    return res.status(400).json({ error: "Missing 'summary' query parameter." });
   }
 
-  const jql = `assignee="${assignee}" AND status="${status}" ORDER BY updated DESC`;
+  const jql = `summary ~ "${summary}" ORDER BY updated DESC`;
   const jiraUrl = `${process.env.JIRA_BASE_URL}/rest/api/3/search`;
 
   try {
