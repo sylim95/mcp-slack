@@ -58,12 +58,12 @@ app.get('/api/jira/issues', async (req, res) => {
   }
 });
 
-// Jira 댓글 요약
-app.get('/api/jira/comments/summary', async (req, res) => {
-  const { key, channel } = req.query;
+// Jira 댓글 조회
+app.get('/api/jira/comments', async (req, res) => {
+  const { key } = req.query;
 
-  if (!key || !channel) {
-    return res.status(400).json({ error: "Missing 'key' or 'channel'" });
+  if (!key) {
+    return res.status(400).json({ error: "Missing 'key' query parameter" });
   }
 
   const url = `${process.env.JIRA_BASE_URL}/rest/api/3/issue/${key}/comment`;
@@ -76,43 +76,16 @@ app.get('/api/jira/comments/summary', async (req, res) => {
       }
     });
 
-    const comments = (response.data.comments || [])
-      .map(c => extractPlainText(c.body))
-      .filter(Boolean)
-      .slice(0, 10);
+    const comments = (response.data.comments || []).map(comment => ({
+      author: comment.author.displayName,
+      created: comment.created,
+      body: extractPlainText(comment.body)
+    }));
 
-    const joined = comments.map((c, i) => `${i + 1}. ${c}`).join('\n');
-
-    const gptRes = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "너는 Jira 댓글을 요약하는 어시스턴트야." },
-        { role: "user", content: `다음 Jira 이슈의 댓글을 요약해줘:\n\n${joined}` }
-      ],
-      temperature: 0.3
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const summary = gptRes.data.choices[0].message.content.trim();
-
-    await axios.post('https://slack.com/api/chat.postMessage', {
-      channel,
-      text: `📝 *${key} 이슈 댓글 요약*\n\n${summary}`
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.SLACK_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    res.json({ ok: true });
+    res.json({ comments });
   } catch (e) {
-    console.error('요약 실패:', e.response?.data || e.message);
-    res.status(500).json({ error: '댓글 요약 실패' });
+    console.error('Jira API 오류:', e.response?.data || e.message);
+    res.status(500).json({ error: '댓글 조회 실패' });
   }
 });
 
