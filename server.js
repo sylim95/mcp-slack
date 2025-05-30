@@ -27,6 +27,8 @@ app.get('/api/jira/issues', async (req, res) => {
   if (status) jqlParts.push(`status = "${status}"`);
   const jql = jqlParts.join(' AND ');
 
+  console.log('사용된 JQL:', jql);
+
   const jiraUrl = `${process.env.JIRA_BASE_URL}/rest/api/3/search`;
 
   try {
