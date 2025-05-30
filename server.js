@@ -70,7 +70,7 @@ app.post('/api/slack/send', async (req, res) => {
     blocks.push({
       type: 'image',
       image_url: imageUrl,
-      alt_text: '분석 대상 이미지'
+      alt_text: '첨부된 이미지'
     });
   }
 
