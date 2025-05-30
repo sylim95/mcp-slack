@@ -1,4 +1,3 @@
-
 import express from 'express';
 import axios from 'axios';
 import bodyParser from 'body-parser';
@@ -20,7 +19,7 @@ app.use(bodyParser.json());
 
 async function refineQueryWithGPT(userText) {
   try {
-    const prompt = `사용자가 말한 내용을 검색에 적합한 핵심 키워드로 바꿔줘:\"${userText}\"`;
+    const prompt = `사용자가 말한 내용을 검색에 적합한 핵심 키워드로 바꿔줘: "${userText}"`;
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: "gpt-3.5-turbo",
       messages: [
@@ -67,9 +66,7 @@ app.post('/slack/events', async (req, res) => {
 
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel,
-        text: `📍 *"${refined}" 검색 결과입니다:*
-
-${formatted || '검색 결과가 없습니다.'}`
+        text: `📍 *"${refined}" 검색 결과입니다:*\n\n${formatted || '검색 결과가 없습니다.'}`
       }, {
         headers: {
           Authorization: `Bearer ${process.env.SLACK_TOKEN}`,
@@ -87,6 +84,6 @@ ${formatted || '검색 결과가 없습니다.'}`
   }
 });
 
-app.get('/', (req, res) => res.send('OK'));
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ MCP GPT Bot running on port ${PORT}`));
+app.get('/openapi.json', (req, res) => {
+  const spec = fs.readFileSync(path.join(__dirname, 'openapi.json'));
+  r
