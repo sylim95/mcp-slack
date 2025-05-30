@@ -17,23 +17,27 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// GPT로 검색 키워드 추출
 async function refineQueryWithGPT(userText) {
   try {
     const prompt = `사용자가 말한 내용을 검색에 적합한 핵심 키워드로 바꿔줘: "${userText}"`;
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "너는 사용자의 자연어 질문을 검색 키워드로 바꿔주는 AI야." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.7
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "너는 사용자의 자연어 질문을 검색 키워드로 바꿔주는 AI야." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
-
+    );
     return response.data.choices[0].message.content.trim();
   } catch (e) {
     console.error("GPT 키워드 추출 실패:", e.message);
@@ -41,13 +45,14 @@ async function refineQueryWithGPT(userText) {
   }
 }
 
+// Slack에서 Mentions 이벤트 수신
 app.post('/slack/events', async (req, res) => {
   const { type, event } = req.body;
 
   if (type === 'url_verification') return res.send({ challenge: req.body.challenge });
 
   if (event && event.type === 'app_mention') {
-    const rawText = event.text.replace(/<@[^>]+>/, '').trim();
+    const rawText = event.text.replace(/<@[^>]+>/, '').trim(); // 봇 태그 제거
     const channel = event.channel;
 
     const refined = await refineQueryWithGPT(rawText);
@@ -84,6 +89,14 @@ app.post('/slack/events', async (req, res) => {
   }
 });
 
+// GPT MCP용 API 문서 (선택)
 app.get('/openapi.json', (req, res) => {
   const spec = fs.readFileSync(path.join(__dirname, 'openapi.json'));
-  r
+  res.type('application/json').send(spec);
+});
+
+// Health check
+app.get('/', (req, res) => res.send('OK'));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ MCP GPT Bot running on port ${PORT}`));
