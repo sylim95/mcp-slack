@@ -34,6 +34,14 @@ app.post('/api/slack/send', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('OK');
+});
+
+app.get('/health', (req, res) => {
+  res.send('Healthy');
+});
+
 app.get('/openapi.json', (req, res) => {
   const spec = fs.readFileSync(path.join(__dirname, 'openapi.json'));
   res.type('application/json').send(spec);
