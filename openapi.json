@@ -108,7 +108,7 @@
       "post": {
         "operationId": "sendSlackMessage",
         "summary": "Slack 메시지 전송",
-        "description": "지정된 Slack 채널에 텍스트 메시지(및 선택적으로 이미지)를 전송합니다. 모델이 요약한 Jira 정보를 공유할 때 이 API를 사용할 수 있습니다.",
+        "description": "지정된 Slack 채널에 텍스트 메시지(및 선택적으로 이미지)를 전송합니다. 메시지는 일반 텍스트 또는 마크다운 형식으로 전송할 수 있습니다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -116,9 +116,24 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "channel": { "type": "string", "description": "Slack 채널 ID (예: #general 또는 C01...)"},
-                  "message": { "type": "string", "description": "전송할 텍스트 메시지" },
-                  "imageUrl": { "type": "string", "description": "첨부 이미지 URL (선택)" }
+                  "channel": {
+                    "type": "string",
+                    "description": "Slack 채널 ID (예: #general 또는 C01...)"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "전송할 텍스트 메시지"
+                  },
+                  "imageUrl": {
+                    "type": "string",
+                    "description": "첨부 이미지 URL (선택)"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["plain", "markdown"],
+                    "default": "plain",
+                    "description": "메시지 포맷 형식: 일반 텍스트는 'plain', 마크다운은 'markdown'"
+                  }
                 },
                 "required": ["channel", "message"]
               }
