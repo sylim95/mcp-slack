@@ -146,7 +146,8 @@ app.post('/api/slack/send', async (req, res) => {
     const result = await axios.post('https://slack.com/api/chat.postMessage', {
       channel,
       text,
-      blocks
+      blocks,
+      mrkdwn: true
     }, {
       headers: {
         Authorization: `Bearer ${process.env.SLACK_TOKEN}`,
