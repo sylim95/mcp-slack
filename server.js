@@ -10,6 +10,18 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+function markdownToMrkdwn(markdown) {
+  return markdown
+    .replace(/^### (.*$)/gm, '*$1*')
+    .replace(/^## (.*$)/gm, '*$1*')
+    .replace(/^# (.*$)/gm, '*$1*')
+    .replace(/^\s*[-*] (.*$)/gm, '• $1')
+    .replace(/\*\*(.*?)\*\*/g, '*$1*')
+    .replace(/\*(.*?)\*/g, '_$1_')
+    .replace(/`{1,3}(.*?)`{1,3}/g, '`$1`')
+    .replace(/\n{2,}/g, '\n');
+}
+
 // Jira 이슈 조회
 app.get('/api/jira/issues', async (req, res) => {
   const { summary, assignee, status } = req.query;
@@ -25,8 +37,6 @@ app.get('/api/jira/issues', async (req, res) => {
   if (assignee) jqlParts.push(`assignee = "${assignee}"`);
   if (status) jqlParts.push(`status = "${status}"`);
   const jql = jqlParts.join(' AND ');
-
-  console.log('사용된 JQL:', jql);
 
   const jiraUrl = `${process.env.JIRA_BASE_URL}/rest/api/3/search`;
 
@@ -77,8 +87,6 @@ app.get('/api/jira/comments', async (req, res) => {
     });
 
     const comments = (response.data.comments || []).map(comment => {
-      console.log('comment.body:', JSON.stringify(comment.body, null, 2));
-    
       return {
         author: comment.author.displayName,
         created: comment.created,
@@ -103,12 +111,17 @@ function extractPlainText(body) {
   }
 }
 
-// Slack 메시지 전송
+// Slack 메시지 전송 (Markdown 지원)
 app.post('/api/slack/send', async (req, res) => {
-  const { channel, message, imageUrl } = req.body;
+  const { channel, message, imageUrl, format = 'plain' } = req.body;
 
   if (!channel || !message) {
     return res.status(400).json({ error: "Missing 'channel' or 'message'" });
+  }
+
+  let text = message;
+  if (format === 'markdown') {
+    text = markdownToMrkdwn(message);
   }
 
   const blocks = [
@@ -116,7 +129,7 @@ app.post('/api/slack/send', async (req, res) => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: message
+        text
       }
     }
   ];
@@ -132,7 +145,7 @@ app.post('/api/slack/send', async (req, res) => {
   try {
     const result = await axios.post('https://slack.com/api/chat.postMessage', {
       channel,
-      text: message,
+      text,
       blocks
     }, {
       headers: {
