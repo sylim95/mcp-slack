@@ -16,12 +16,12 @@ app.post('/insert', async (req, res) => {
   }
 
   // MCP Proxy가 읽을 수 있도록 stdout으로 출력
-  console.log(JSON.stringify({
+  process.stdout.write(JSON.stringify({
     tool: "insertText",
     payload: {
       text
     }
-  }));
+  }) + "\n");
 
   res.json({ message: 'Text sent to MCP Proxy' });
 });
