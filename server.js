@@ -24,6 +24,11 @@ app.post('/insert', async (req, res) => {
   res.json({ message: 'Text sent to MCP Proxy' });
 });
 
+app.get('/openapi.json', (req, res) => {
+  const jsonPath = path.join(process.cwd(), 'openapi.json');
+  res.type('application/json').send(fs.readFileSync(jsonPath, 'utf-8'));
+});
+
 app.listen(3000, () => {
   console.log('MCP insertText server running on port 3000');
 });
