@@ -1,16 +1,14 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "JetBrains MCP Insert Tool",
-    "version": "1.0.0",
-    "description": "MCP 기반 JetBrains IDE와 통신하여 텍스트를 삽입하는 기본 예제 API입니다."
+    "title": "JetBrains Insert Text",
+    "version": "1.0.0"
   },
   "paths": {
     "/insert": {
       "post": {
         "operationId": "insertText",
-        "summary": "텍스트 삽입 요청",
-        "description": "JetBrains IDE의 현재 커서 위치에 텍스트를 삽입합니다.",
+        "summary": "Insert text into IntelliJ editor",
         "requestBody": {
           "required": true,
           "content": {
@@ -18,36 +16,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "content": {
-                    "type": "string",
-                    "description": "삽입할 텍스트",
-                    "example": "Hello from MCP!"
-                  },
-                  "position": {
-                    "type": "string",
-                    "description": "삽입 위치 (예: 'cursor', 'top', 'bottom')",
-                    "example": "cursor"
+                  "text": {
+                    "type": "string"
                   }
                 },
-                "required": ["content"]
+                "required": ["text"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "삽입 요청 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string" },
-                    "inserted": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Text inserted successfully"
           }
         }
       }
