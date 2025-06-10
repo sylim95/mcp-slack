@@ -1,161 +1,28 @@
-{
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Jira to Slack MCP API",
-    "version": "1.0.0",
-    "description": "MCP 시스템에서 Jira 이슈 및 댓글을 조회하고, Slack으로 메시지를 전송하는 데 사용되는 API 명세입니다. 이 명세를 기반으로 모델은 적절한 기능을 호출할 수 있습니다."
-  },
-  "paths": {
-    "/api/jira/issues": {
-      "get": {
-        "operationId": "getJiraIssues",
-        "summary": "Jira 이슈 목록 조회",
-        "description": "summary, assignee, status 조건 중 하나 이상을 지정하여 Jira 이슈를 조회합니다. 모델이 사용자의 요청으로 특정 이슈를 찾고자 할 때 이 API를 호출합니다.",
-        "parameters": [
-          {
-            "name": "summary",
-            "in": "query",
-            "required": false,
-            "description": "이슈 요약(제목) 키워드",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "assignee",
-            "in": "query",
-            "required": false,
-            "description": "담당자 이름 (예: 홍길동)",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "description": "이슈 상태 (예: 'To Do', 'In Progress', 'Done')",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "이슈 목록 반환",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "key": { "type": "string", "description": "이슈 키" },
-                          "url": { "type": "string", "description": "Jira 웹 링크" },
-                          "summary": { "type": "string", "description": "이슈 요약" },
-                          "status": { "type": "string", "description": "이슈 상태" },
-                          "assignee": { "type": "string", "description": "담당자 이름" }
-                        }
-                      }
-                    }
-                  }
-                }
+"/insert": {
+  "post": {
+    "operationId": "insertText",
+    "summary": "IntelliJ에 텍스트 삽입",
+    "description": "현재 커서 위치에 텍스트를 삽입합니다.",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "삽입할 텍스트"
               }
-            }
+            },
+            "required": ["text"]
           }
         }
       }
     },
-    "/api/jira/comments": {
-      "get": {
-        "operationId": "getJiraComments",
-        "summary": "Jira 이슈 댓글 조회",
-        "description": "지정된 Jira 이슈 키에 해당하는 댓글 목록을 반환합니다. 모델이 이슈 관련 발화를 받았을 때 이 API를 호출하여 댓글 내용을 파악하거나 요약할 수 있습니다.",
-        "parameters": [
-          {
-            "name": "key",
-            "in": "query",
-            "required": true,
-            "description": "Jira 이슈 키",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "댓글 목록 반환",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "comments": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "author": { "type": "string", "description": "댓글 작성자 이름" },
-                          "created": { "type": "string", "format": "date-time", "description": "댓글 작성 시간" },
-                          "body": { "type": "string", "description": "댓글 내용 (plain text 형식)" }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/slack/send": {
-      "post": {
-        "operationId": "sendSlackMessage",
-        "summary": "Slack 메시지 전송",
-        "description": "지정된 Slack 채널에 텍스트 메시지(및 선택적으로 이미지)를 전송합니다. 메시지는 일반 텍스트 또는 마크다운 형식으로 전송할 수 있습니다.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "channel": {
-                    "type": "string",
-                    "description": "Slack 채널 ID (예: #general 또는 C01...)"
-                  },
-                  "message": {
-                    "type": "string",
-                    "description": "전송할 텍스트 메시지"
-                  },
-                  "imageUrl": {
-                    "type": "string",
-                    "description": "첨부 이미지 URL (선택)"
-                  },
-                  "format": {
-                    "type": "string",
-                    "enum": ["plain", "markdown"],
-                    "default": "plain",
-                    "description": "메시지 포맷 형식: 일반 텍스트는 'plain', 마크다운은 'markdown'"
-                  }
-                },
-                "required": ["channel", "message"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "전송 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "ts": { "type": "string", "description": "메시지 Slack 타임스탬프" }
-                  }
-                }
-              }
-            }
-          }
-        }
+    "responses": {
+      "200": {
+        "description": "삽입 완료"
       }
     }
   }
