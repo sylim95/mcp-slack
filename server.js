@@ -1,39 +1,29 @@
 import express from 'express';
-import cors from 'cors';
 import bodyParser from 'body-parser';
-import { readFileSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import cors from 'cors';
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.post('/insert', async (req, res) => {
+  const { text } = req.body;
 
-// insert API 예시 (MCP 플러그인에서 사용할 수 있도록 구성)
-app.post('/insert', (req, res) => {
-  const { content, position } = req.body;
-
-  if (!content) {
-    return res.status(400).json({ error: "'content'는 필수입니다" });
+  if (!text) {
+    return res.status(400).json({ error: 'Missing text' });
   }
 
-  // 실제 인텔리제이에서 처리될 insert는 MCP가 담당하므로 여기는 log 용
-  console.log(`📝 요청된 텍스트 삽입: "${content}" at position: ${position || '기본 위치'}`);
+  // MCP Proxy가 읽을 수 있도록 stdout으로 출력
+  console.log(JSON.stringify({
+    tool: "insertText",
+    payload: {
+      text
+    }
+  }));
 
-  res.json({ message: '삽입 요청 처리 완료', inserted: content });
+  res.json({ message: 'Text sent to MCP Proxy' });
 });
 
-// OpenAPI 명세 제공
-app.get('/openapi.json', (req, res) => {
-  res.type('application/json').sendFile(path.join(__dirname, 'openapi.json'));
-});
-
-// 헬스 체크
-app.get('/', (_, res) => res.send('✅ MCP Basic Server 정상 동작 중'));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 MCP 서버가 포트 ${PORT}에서 실행 중`);
+app.listen(3000, () => {
+  console.log('MCP insertText server running on port 3000');
 });
